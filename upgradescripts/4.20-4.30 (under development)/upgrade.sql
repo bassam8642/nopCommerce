@@ -3256,7 +3256,7 @@ GO
 --new column
 IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id=object_id('[RewardPointsHistory]') and NAME='UsedWithOrder')
 BEGIN
-	ALTER TABLE dbo.RewardPointsHistory ADD UsedWithOrder uniqueidentifier NULL
+	ALTER TABLE [RewardPointsHistory] ADD [UsedWithOrder] uniqueidentifier NULL
 END
 GO
 
@@ -3298,5 +3298,13 @@ IF NOT EXISTS (SELECT 1 FROM [Setting] WHERE [Name] = N'avalarataxsettings.enabl
 BEGIN
     INSERT [Setting] ([Name], [Value], [StoreId])
     VALUES (N'avalarataxsettings.enablelogging', N'True', 0)
+END
+GO
+
+--new setting
+IF NOT EXISTS (SELECT 1 FROM [Setting] WHERE [Name] = N'commonsettings.restarttimeout')
+BEGIN
+    INSERT [Setting] ([Name], [Value], [StoreId])
+    VALUES (N'commonsettings.restarttimeout', N'3000', 0)
 END
 GO
