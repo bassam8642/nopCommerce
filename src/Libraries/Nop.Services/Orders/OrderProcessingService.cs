@@ -15,13 +15,13 @@ using Nop.Core.Domain.Payments;
 using Nop.Core.Domain.Shipping;
 using Nop.Core.Domain.Tax;
 using Nop.Core.Domain.Vendors;
+using Nop.Core.Events;
 using Nop.Services.Affiliates;
 using Nop.Services.Catalog;
 using Nop.Services.Common;
 using Nop.Services.Customers;
 using Nop.Services.Directory;
 using Nop.Services.Discounts;
-using Nop.Services.Events;
 using Nop.Services.Localization;
 using Nop.Services.Logging;
 using Nop.Services.Messages;
@@ -1049,7 +1049,7 @@ namespace Nop.Services.Orders
             _orderService.UpdateOrder(order);
 
             //order notes, notifications
-            AddOrderNote(order, $"Order status has been changed to {os}");
+            AddOrderNote(order, $"Order status has been changed to {_localizationService.GetLocalizedEnum(os)}");
 
             if (prevOrderStatus != OrderStatus.Complete &&
                 os == OrderStatus.Complete
@@ -1392,9 +1392,8 @@ namespace Nop.Services.Orders
         {
             //process payment
             ProcessPaymentResult processPaymentResult;
-            //skip payment workflow if order total equals zero
-            var skipPaymentWorkflow = details.OrderTotal == decimal.Zero;
-            if (!skipPaymentWorkflow)
+            //check if is payment workflow required
+            if (IsPaymentWorkflowRequired(details.Cart))
             {
                 var customer = _customerService.GetCustomerById(processPaymentRequest.CustomerId);
                 var paymentMethod = _paymentPluginManager

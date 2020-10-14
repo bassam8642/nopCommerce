@@ -9,18 +9,12 @@ namespace Nop.Services.News.Caching
     public partial class NewsCommentCacheEventConsumer : CacheEventConsumer<NewsComment>
     {
         /// <summary>
-        /// entity
+        /// Clear cache data
         /// </summary>
         /// <param name="entity">Entity</param>
-        /// <param name="entityEventType">Entity event type</param>
-        protected override void ClearCache(NewsComment entity, EntityEventType entityEventType)
+        protected override void ClearCache(NewsComment entity)
         {
-            if (entityEventType != EntityEventType.Delete)
-                return;
-
-            var prefix = _cacheKeyService.PrepareKeyPrefix(NopNewsDefaults.NewsCommentsNumberPrefixCacheKey, entity.NewsItemId);
-
-            RemoveByPrefix(prefix);
+            RemoveByPrefix(NopNewsDefaults.NewsCommentsNumberPrefix, entity.NewsItemId);
         }
     }
 }

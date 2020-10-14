@@ -818,11 +818,11 @@ namespace Nop.Services.ExportImport
         /// <param name="categories">Categories</param>
         public virtual byte[] ExportCategoriesToXlsx(IList<Category> categories)
         {
-            var parentCatagories = new List<Category>();
+            var parentCategories = new List<Category>();
             if (_catalogSettings.ExportImportCategoriesUsingCategoryName)
             {
                 //performance optimization, load all parent categories in one SQL request
-                parentCatagories = _categoryService.GetCategoriesByIds(categories.Select(c => c.ParentCategoryId).Where(id => id != 0).ToArray());
+                parentCategories.AddRange(_categoryService.GetCategoriesByIds(categories.Select(c => c.ParentCategoryId).Where(id => id != 0).ToArray()));
             }
 
             //property manager 
@@ -839,7 +839,7 @@ namespace Nop.Services.ExportImport
                 new PropertyByName<Category>("ParentCategoryId", p => p.ParentCategoryId),
                 new PropertyByName<Category>("ParentCategoryName", p =>
                 {
-                    var category = parentCatagories.FirstOrDefault(c => c.Id == p.ParentCategoryId);
+                    var category = parentCategories.FirstOrDefault(c => c.Id == p.ParentCategoryId);
                     return category != null ? _categoryService.GetFormattedBreadCrumb(category) : null;
                 }, !_catalogSettings.ExportImportCategoriesUsingCategoryName),
                 new PropertyByName<Category>("Picture", p => GetPictures(p.PictureId)),
@@ -1721,6 +1721,14 @@ namespace Nop.Services.ExportImport
 
             const string separator = ",";
             var sb = new StringBuilder();
+
+            sb.Append(_localizationService.GetResource("Admin.Promotions.NewsLetterSubscriptions.Fields.Email"));
+            sb.Append(separator);
+            sb.Append(_localizationService.GetResource("Admin.Promotions.NewsLetterSubscriptions.Fields.Active"));
+            sb.Append(separator);
+            sb.Append(_localizationService.GetResource("Admin.Promotions.NewsLetterSubscriptions.Fields.Store"));
+            sb.Append(Environment.NewLine);
+
             foreach (var subscription in subscriptions)
             {
                 sb.Append(subscription.Email);
@@ -1728,7 +1736,7 @@ namespace Nop.Services.ExportImport
                 sb.Append(subscription.Active);
                 sb.Append(separator);
                 sb.Append(subscription.StoreId);
-                sb.Append(Environment.NewLine); //new line
+                sb.Append(Environment.NewLine);
             }
 
             return sb.ToString();

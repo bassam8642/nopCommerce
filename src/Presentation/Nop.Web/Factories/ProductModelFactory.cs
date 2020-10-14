@@ -14,7 +14,6 @@ using Nop.Core.Domain.Security;
 using Nop.Core.Domain.Seo;
 using Nop.Core.Domain.Shipping;
 using Nop.Core.Domain.Vendors;
-using Nop.Services.Caching;
 using Nop.Services.Catalog;
 using Nop.Services.Common;
 using Nop.Services.Customers;
@@ -44,7 +43,6 @@ namespace Nop.Web.Factories
         private readonly CaptchaSettings _captchaSettings;
         private readonly CatalogSettings _catalogSettings;
         private readonly CustomerSettings _customerSettings;
-        private readonly ICacheKeyService _cacheKeyService;
         private readonly ICategoryService _categoryService;
         private readonly ICurrencyService _currencyService;
         private readonly ICustomerService _customerService;
@@ -77,7 +75,7 @@ namespace Nop.Web.Factories
         private readonly OrderSettings _orderSettings;
         private readonly SeoSettings _seoSettings;
         private readonly ShippingSettings _shippingSettings;
-        private readonly VendorSettings _vendorSettings;
+        private readonly VendorSettings _vendorSettings;        
 
         #endregion
 
@@ -86,7 +84,6 @@ namespace Nop.Web.Factories
         public ProductModelFactory(CaptchaSettings captchaSettings,
             CatalogSettings catalogSettings,
             CustomerSettings customerSettings,
-            ICacheKeyService cacheKeyService,
             ICategoryService categoryService,
             ICurrencyService currencyService,
             ICustomerService customerService,
@@ -124,7 +121,6 @@ namespace Nop.Web.Factories
             _captchaSettings = captchaSettings;
             _catalogSettings = catalogSettings;
             _customerSettings = customerSettings;
-            _cacheKeyService = cacheKeyService;
             _categoryService = categoryService;
             _currencyService = currencyService;
             _customerService = customerService;
@@ -158,11 +154,64 @@ namespace Nop.Web.Factories
             _seoSettings = seoSettings;
             _shippingSettings = shippingSettings;
             _vendorSettings = vendorSettings;
+            
         }
 
         #endregion
 
         #region Utilities
+
+        /// <summary>
+        /// Prepare the product specification models
+        /// </summary>
+        /// <param name="product">Product</param>
+        /// <param name="group">Specification attribute group</param>
+        /// <returns>List of product specification model</returns>
+        protected virtual IList<ProductSpecificationAttributeModel> PrepareProductSpecificationAttributeModel(Product product, SpecificationAttributeGroup group)
+        {
+            if (product == null)
+                throw new ArgumentNullException(nameof(product));
+
+            var productSpecificationAttributes = _specificationAttributeService.GetProductSpecificationAttributes(
+                    product.Id, specificationAttributeGroupId: group?.Id, showOnProductPage: true);
+
+            var result = new List<ProductSpecificationAttributeModel>();
+
+            foreach (var psa in productSpecificationAttributes)
+            {
+                var option = _specificationAttributeService.GetSpecificationAttributeOptionById(psa.SpecificationAttributeOptionId);
+
+                var model = result.FirstOrDefault(model => model.Id == option.SpecificationAttributeId);
+                if (model == null)
+                {
+                    var attribute = _specificationAttributeService.GetSpecificationAttributeById(option.SpecificationAttributeId);
+                    model = new ProductSpecificationAttributeModel
+                    {
+                        Id = attribute.Id,
+                        Name = _localizationService.GetLocalized(attribute, x => x.Name)
+                    };
+                    result.Add(model);
+                }
+
+                var value = new ProductSpecificationAttributeValueModel
+                {
+                    AttributeTypeId = psa.AttributeTypeId,
+                    ColorSquaresRgb = option.ColorSquaresRgb,
+                    ValueRaw = psa.AttributeType switch
+                    {
+                        SpecificationAttributeType.Option => WebUtility.HtmlEncode(_localizationService.GetLocalized(option, x => x.Name)),
+                        SpecificationAttributeType.CustomText => WebUtility.HtmlEncode(_localizationService.GetLocalized(psa, x => x.CustomValue)),
+                        SpecificationAttributeType.CustomHtmlText => _localizationService.GetLocalized(psa, x => x.CustomValue),
+                        SpecificationAttributeType.Hyperlink => $"<a href='{psa.CustomValue}' target='_blank'>{psa.CustomValue}</a>",
+                        _ => null
+                    }
+                };
+
+                model.Values.Add(value);
+            }
+
+            return result;
+        }
 
         /// <summary>
         /// Prepare the product review overview model
@@ -175,7 +224,7 @@ namespace Nop.Web.Factories
 
             if (_catalogSettings.ShowProductReviewsPerStore)
             {
-                var cacheKey = _cacheKeyService.PrepareKeyForDefaultCache(NopModelCacheDefaults.ProductReviewsModelKey, product, _storeContext.CurrentStore);
+                var cacheKey = _staticCacheManager.PrepareKeyForDefaultCache(NopModelCacheDefaults.ProductReviewsModelKey, product, _storeContext.CurrentStore);
 
                 productReview = _staticCacheManager.Get(cacheKey, () =>
                 {
@@ -201,6 +250,7 @@ namespace Nop.Web.Factories
             {
                 productReview.ProductId = product.Id;
                 productReview.AllowCustomerReviews = product.AllowCustomerReviews;
+                productReview.CanAddNewReview = _productService.CanAddReview(product.Id, _storeContext.CurrentStore.Id);
             }
 
             return productReview;
@@ -451,7 +501,7 @@ namespace Nop.Web.Factories
             var pictureSize = productThumbPictureSize ?? _mediaSettings.ProductThumbPictureSize;
 
             //prepare picture model
-            var cacheKey = _cacheKeyService.PrepareKeyForDefaultCache(NopModelCacheDefaults.ProductDefaultPictureModelKey, 
+            var cacheKey = _staticCacheManager.PrepareKeyForDefaultCache(NopModelCacheDefaults.ProductDefaultPictureModelKey, 
                 product, pictureSize, true, _workContext.WorkingLanguage, _webHelper.IsCurrentConnectionSecured(),
                 _storeContext.CurrentStore);
 
@@ -792,7 +842,7 @@ namespace Nop.Web.Factories
                         //"image square" picture (with with "image squares" attribute type only)
                         if (attributeValue.ImageSquaresPictureId > 0)
                         {
-                            var productAttributeImageSquarePictureCacheKey = _cacheKeyService.PrepareKeyForDefaultCache(NopModelCacheDefaults.ProductAttributeImageSquarePictureModelKey
+                            var productAttributeImageSquarePictureCacheKey = _staticCacheManager.PrepareKeyForDefaultCache(NopModelCacheDefaults.ProductAttributeImageSquarePictureModelKey
                                 , attributeValue.ImageSquaresPictureId,
                                     _webHelper.IsCurrentConnectionSecured(),
                                     _storeContext.CurrentStore);
@@ -996,7 +1046,7 @@ namespace Nop.Web.Factories
                 _mediaSettings.ProductDetailsPictureSize;
 
             //prepare picture models
-            var productPicturesCacheKey = _cacheKeyService.PrepareKeyForDefaultCache(NopModelCacheDefaults.ProductDetailsPicturesModelKey
+            var productPicturesCacheKey = _staticCacheManager.PrepareKeyForDefaultCache(NopModelCacheDefaults.ProductDetailsPicturesModelKey
                 , product, defaultPictureSize, isAssociatedProduct, 
                 _workContext.WorkingLanguage, _webHelper.IsCurrentConnectionSecured(), _storeContext.CurrentStore);
             var cachedPictures = _staticCacheManager.Get(productPicturesCacheKey, () =>
@@ -1124,7 +1174,7 @@ namespace Nop.Web.Factories
                 //specs
                 if (prepareSpecificationAttributes)
                 {
-                    model.SpecificationAttributeModels = PrepareProductSpecificationModel(product);
+                    model.ProductSpecificationModel = PrepareProductSpecificationModel(product);
                 }
 
                 //reviews
@@ -1299,7 +1349,7 @@ namespace Nop.Web.Factories
             //do not prepare this model for the associated products. anyway it's not used
             if (!isAssociatedProduct)
             {
-                model.ProductSpecifications = PrepareProductSpecificationModel(product);
+                model.ProductSpecificationModel = PrepareProductSpecificationModel(product);
             }
 
             //product review overview
@@ -1605,56 +1655,36 @@ namespace Nop.Web.Factories
         }
 
         /// <summary>
-        /// Prepare the product specification models
+        /// Prepare the product specification model
         /// </summary>
         /// <param name="product">Product</param>
-        /// <returns>List of product specification model</returns>
-        public virtual IList<ProductSpecificationModel> PrepareProductSpecificationModel(Product product)
+        /// <returns>The product specification model</returns>
+        public virtual ProductSpecificationModel PrepareProductSpecificationModel(Product product)
         {
             if (product == null)
                 throw new ArgumentNullException(nameof(product));
 
-            return _specificationAttributeService.GetProductSpecificationAttributes(product.Id, 0, null, true)
-                .Select(psa =>
+            var model = new ProductSpecificationModel();
+
+            // Add non-grouped attributes first
+            model.Groups.Add(new ProductSpecificationAttributeGroupModel
+            {
+                Attributes = PrepareProductSpecificationAttributeModel(product, null)
+            });
+
+            // Add grouped attributes
+            var groups = _specificationAttributeService.GetProductSpecificationAttributeGroups(product.Id);
+            foreach (var group in groups)
+            {
+                model.Groups.Add(new ProductSpecificationAttributeGroupModel
                 {
-                    var specAttributeOption =
-                        _specificationAttributeService.GetSpecificationAttributeOptionById(
-                            psa.SpecificationAttributeOptionId);
-                    var specAttribute =
-                        _specificationAttributeService.GetSpecificationAttributeById(specAttributeOption
-                            .SpecificationAttributeId);
+                    Id = group.Id,
+                    Name = _localizationService.GetLocalized(group, x => x.Name),
+                    Attributes = PrepareProductSpecificationAttributeModel(product, group)
+                });
+            }
 
-                    var m = new ProductSpecificationModel
-                    {
-                        SpecificationAttributeId = specAttribute.Id,
-                        SpecificationAttributeName = _localizationService.GetLocalized(specAttribute, x => x.Name),
-                        ColorSquaresRgb = specAttributeOption.ColorSquaresRgb,
-                        AttributeTypeId = psa.AttributeTypeId
-                    };
-
-                    switch (psa.AttributeType)
-                    {
-                        case SpecificationAttributeType.Option:
-                            m.ValueRaw =
-                                WebUtility.HtmlEncode(
-                                    _localizationService.GetLocalized(specAttributeOption, x => x.Name));
-                            break;
-                        case SpecificationAttributeType.CustomText:
-                            m.ValueRaw =
-                                WebUtility.HtmlEncode(_localizationService.GetLocalized(psa, x => x.CustomValue));
-                            break;
-                        case SpecificationAttributeType.CustomHtmlText:
-                            m.ValueRaw = _localizationService.GetLocalized(psa, x => x.CustomValue);
-                            break;
-                        case SpecificationAttributeType.Hyperlink:
-                            m.ValueRaw = $"<a href='{psa.CustomValue}' target='_blank'>{psa.CustomValue}</a>";
-                            break;
-                        default:
-                            break;
-                    }
-
-                    return m;
-                }).ToList();
+            return model;
         }
 
         #endregion

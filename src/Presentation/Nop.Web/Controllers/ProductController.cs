@@ -8,10 +8,10 @@ using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Localization;
 using Nop.Core.Domain.Orders;
 using Nop.Core.Domain.Security;
+using Nop.Core.Events;
 using Nop.Core.Rss;
 using Nop.Services.Catalog;
 using Nop.Services.Customers;
-using Nop.Services.Events;
 using Nop.Services.Localization;
 using Nop.Services.Logging;
 using Nop.Services.Messages;
@@ -113,7 +113,7 @@ namespace Nop.Web.Controllers
             _workContext = workContext;
             _workflowMessageService = workflowMessageService;
             _localizationSettings = localizationSettings;
-            _shoppingCartSettings = shoppingCartSettings;
+            _shoppingCartSettings = shoppingCartSettings;            
         }
 
         #endregion
@@ -366,6 +366,8 @@ namespace Nop.Web.Controllers
             //default value
             model.AddProductReview.Rating = _catalogSettings.DefaultProductRatingValue;
 
+            model.AddProductReview.CanAddNewReview = _productService.CanAddReview(product.Id, _storeContext.CurrentStore.Id);
+
             //default value for all additional review types
             if (model.ReviewTypeList.Count > 0)
                 foreach (var additionalProductReview in model.AddAdditionalProductReviewList)
@@ -382,7 +384,9 @@ namespace Nop.Web.Controllers
         public virtual IActionResult ProductReviewsAdd(int productId, ProductReviewsModel model, bool captchaValid)
         {
             var product = _productService.GetProductById(productId);
-            if (product == null || product.Deleted || !product.Published || !product.AllowCustomerReviews)
+            
+            if (product == null || product.Deleted || !product.Published || !product.AllowCustomerReviews ||
+                !_productService.CanAddReview(product.Id, _storeContext.CurrentStore.Id))
                 return RedirectToRoute("Homepage");
 
             //validate CAPTCHA

@@ -12,11 +12,13 @@ namespace Nop.Services.News.Caching
         /// Clear cache data
         /// </summary>
         /// <param name="entity">Entity</param>
-        protected override void ClearCache(NewsItem entity)
+        /// <param name="entityEventType">Entity event type</param>
+        protected override void ClearCache(NewsItem entity, EntityEventType entityEventType)
         {
-            var prefix = _cacheKeyService.PrepareKeyPrefix(NopNewsDefaults.NewsCommentsNumberPrefixCacheKey, entity);
+            if (entityEventType == EntityEventType.Delete)
+                RemoveByPrefix(NopNewsDefaults.NewsCommentsNumberPrefix, entity);
 
-            RemoveByPrefix(prefix);
+            base.ClearCache(entity, entityEventType);
         }
     }
 }
