@@ -609,17 +609,7 @@ namespace Nop.Web.Factories
                 throw new ArgumentNullException(nameof(model));
 
             model.DisplayCaptcha = _captchaSettings.Enabled && _captchaSettings.ShowOnForgotPasswordPage;
-            
-            return model;
-        }
 
-        /// <summary>
-        /// Prepare the password recovery confirm model
-        /// </summary>
-        /// <returns>Password recovery confirm model</returns>
-        public virtual PasswordRecoveryConfirmModel PreparePasswordRecoveryConfirmModel()
-        {
-            var model = new PasswordRecoveryConfirmModel();
             return model;
         }
 
@@ -627,31 +617,25 @@ namespace Nop.Web.Factories
         /// Prepare the register result model
         /// </summary>
         /// <param name="resultId">Value of UserRegistrationType enum</param>
+        /// <param name="returnUrl">URL to redirect</param>
         /// <returns>Register result model</returns>
-        public virtual RegisterResultModel PrepareRegisterResultModel(int resultId)
+        public virtual RegisterResultModel PrepareRegisterResultModel(int resultId, string returnUrl)
         {
-            var resultText = "";
-            switch ((UserRegistrationType)resultId)
+            var resultText = (UserRegistrationType)resultId switch
             {
-                case UserRegistrationType.Disabled:
-                    resultText = _localizationService.GetResource("Account.Register.Result.Disabled");
-                    break;
-                case UserRegistrationType.Standard:
-                    resultText = _localizationService.GetResource("Account.Register.Result.Standard");
-                    break;
-                case UserRegistrationType.AdminApproval:
-                    resultText = _localizationService.GetResource("Account.Register.Result.AdminApproval");
-                    break;
-                case UserRegistrationType.EmailValidation:
-                    resultText = _localizationService.GetResource("Account.Register.Result.EmailValidation");
-                    break;
-                default:
-                    break;
-            }
+                UserRegistrationType.Disabled => _localizationService.GetResource("Account.Register.Result.Disabled"),
+                UserRegistrationType.Standard => _localizationService.GetResource("Account.Register.Result.Standard"),
+                UserRegistrationType.AdminApproval => _localizationService.GetResource("Account.Register.Result.AdminApproval"),
+                UserRegistrationType.EmailValidation => _localizationService.GetResource("Account.Register.Result.EmailValidation"),
+                _ => null
+            };
+
             var model = new RegisterResultModel
             {
-                Result = resultText
+                Result = resultText,
+                ReturnUrl = returnUrl
             };
+
             return model;
         }
 
@@ -959,18 +943,18 @@ namespace Nop.Web.Factories
         /// <param name="model">Multi-factor authentication model</param>
         /// <returns>Multi-factor authentication model</returns>
         public virtual MultiFactorAuthenticationModel PrepareMultiFactorAuthenticationModel(MultiFactorAuthenticationModel model)
-        {            
+        {
             var customer = _workContext.CurrentCustomer;
 
             model.IsEnabled = !string.IsNullOrEmpty(
                 _genericAttributeService.GetAttribute<string>(customer, NopCustomerDefaults.SelectedMultiFactorAuthenticationProviderAttribute));
-            
-            var multiFactorAuthenticationProviders = _multiFactorAuthenticationPluginManager.LoadActivePlugins(customer, _storeContext.CurrentStore.Id).ToList();            
+
+            var multiFactorAuthenticationProviders = _multiFactorAuthenticationPluginManager.LoadActivePlugins(customer, _storeContext.CurrentStore.Id).ToList();
             foreach (var multiFactorAuthenticationProvider in multiFactorAuthenticationProviders)
             {
                 var providerModel = new MultiFactorAuthenticationProviderModel();
                 var sysName = multiFactorAuthenticationProvider.PluginDescriptor.SystemName;
-                providerModel = PrepareMultiFactorAuthenticationProviderModel(providerModel, sysName);                
+                providerModel = PrepareMultiFactorAuthenticationProviderModel(providerModel, sysName);
                 model.Providers.Add(providerModel);
             }
 
@@ -991,12 +975,15 @@ namespace Nop.Web.Factories
             var multiFactorAuthenticationProvider = _multiFactorAuthenticationPluginManager.LoadActivePlugins(customer, _storeContext.CurrentStore.Id)
                     .Where(provider => provider.PluginDescriptor.SystemName == sysName).FirstOrDefault();
 
-            providerModel.Name = _localizationService.GetLocalizedFriendlyName(multiFactorAuthenticationProvider, _workContext.WorkingLanguage.Id);
-            providerModel.SystemName = sysName;
-            providerModel.Description = multiFactorAuthenticationProvider.Description;
-            providerModel.LogoUrl = _multiFactorAuthenticationPluginManager.GetPluginLogoUrl(multiFactorAuthenticationProvider);
-            providerModel.ViewComponentName = isLogin ? multiFactorAuthenticationProvider.GetVerificationViewComponentName(): multiFactorAuthenticationProvider.GetPublicViewComponentName();
-            providerModel.Selected = sysName == selectedProvider;
+            if (multiFactorAuthenticationProvider != null)
+            {
+                providerModel.Name = _localizationService.GetLocalizedFriendlyName(multiFactorAuthenticationProvider, _workContext.WorkingLanguage.Id);
+                providerModel.SystemName = sysName;
+                providerModel.Description = multiFactorAuthenticationProvider.Description;
+                providerModel.LogoUrl = _multiFactorAuthenticationPluginManager.GetPluginLogoUrl(multiFactorAuthenticationProvider);
+                providerModel.ViewComponentName = isLogin ? multiFactorAuthenticationProvider.GetVerificationViewComponentName() : multiFactorAuthenticationProvider.GetPublicViewComponentName();
+                providerModel.Selected = sysName == selectedProvider;
+            }
 
             return providerModel;
         }

@@ -1209,8 +1209,8 @@ namespace Nop.Web.Areas.Admin.Controllers
             //prepare model
             model = _orderModelFactory.PrepareOrderModel(model, order);
 
-            //selected panel
-            SaveSelectedPanelName("order-billing-shipping", persistForTheNextRequest: false);
+            //selected card
+            SaveSelectedCardName("order-billing-shipping", persistForTheNextRequest: false);
 
             return View(model);
         }
@@ -1235,7 +1235,7 @@ namespace Nop.Web.Areas.Admin.Controllers
             var orderItemId = 0;
             foreach (var formValue in form.Keys)
                 if (formValue.StartsWith("btnSaveOrderItem", StringComparison.InvariantCultureIgnoreCase))
-                    orderItemId = Convert.ToInt32(formValue.Substring("btnSaveOrderItem".Length));
+                    orderItemId = Convert.ToInt32(formValue["btnSaveOrderItem".Length..]);
 
             var orderItem = _orderService.GetOrderItemById(orderItemId)
                 ?? throw new ArgumentException("No order item found with the specified id");
@@ -1317,8 +1317,8 @@ namespace Nop.Web.Areas.Admin.Controllers
             foreach (var warning in updateOrderParameters.Warnings)
                 _notificationService.WarningNotification(warning);
 
-            //selected panel
-            SaveSelectedPanelName("order-products", persistForTheNextRequest: false);
+            //selected card
+            SaveSelectedCardName("order-products", persistForTheNextRequest: false);
 
             return View(model);
         }
@@ -1343,7 +1343,7 @@ namespace Nop.Web.Areas.Admin.Controllers
             var orderItemId = 0;
             foreach (var formValue in form.Keys)
                 if (formValue.StartsWith("btnDeleteOrderItem", StringComparison.InvariantCultureIgnoreCase))
-                    orderItemId = Convert.ToInt32(formValue.Substring("btnDeleteOrderItem".Length));
+                    orderItemId = Convert.ToInt32(formValue["btnDeleteOrderItem".Length..]);
 
             var orderItem = _orderService.GetOrderItemById(orderItemId)
                 ?? throw new ArgumentException("No order item found with the specified id");
@@ -1358,8 +1358,8 @@ namespace Nop.Web.Areas.Admin.Controllers
 
                 _notificationService.ErrorNotification(_localizationService.GetResource("Admin.Orders.OrderItem.DeleteAssociatedGiftCardRecordError"));
 
-                //selected panel
-                SaveSelectedPanelName("order-products", persistForTheNextRequest: false);
+                //selected card
+                SaveSelectedCardName("order-products", persistForTheNextRequest: false);
 
                 return View(model);
             }
@@ -1395,8 +1395,8 @@ namespace Nop.Web.Areas.Admin.Controllers
                 foreach (var warning in updateOrderParameters.Warnings)
                     _notificationService.WarningNotification(warning);
 
-                //selected panel
-                SaveSelectedPanelName("order-products", persistForTheNextRequest: false);
+                //selected card
+                SaveSelectedCardName("order-products", persistForTheNextRequest: false);
 
                 return View(model);
             }
@@ -1418,7 +1418,7 @@ namespace Nop.Web.Areas.Admin.Controllers
             var orderItemId = 0;
             foreach (var formValue in form.Keys)
                 if (formValue.StartsWith("btnResetDownloadCount", StringComparison.InvariantCultureIgnoreCase))
-                    orderItemId = Convert.ToInt32(formValue.Substring("btnResetDownloadCount".Length));
+                    orderItemId = Convert.ToInt32(formValue["btnResetDownloadCount".Length..]);
 
             var orderItem = _orderService.GetOrderItemById(orderItemId)
                 ?? throw new ArgumentException("No order item found with the specified id");
@@ -1434,8 +1434,8 @@ namespace Nop.Web.Areas.Admin.Controllers
             //prepare model
             var model = _orderModelFactory.PrepareOrderModel(null, order);
 
-            //selected panel
-            SaveSelectedPanelName("order-products", persistForTheNextRequest: false);
+            //selected card
+            SaveSelectedCardName("order-products", persistForTheNextRequest: false);
 
             return View(model);
         }
@@ -1456,7 +1456,7 @@ namespace Nop.Web.Areas.Admin.Controllers
             var orderItemId = 0;
             foreach (var formValue in form.Keys)
                 if (formValue.StartsWith("btnPvActivateDownload", StringComparison.InvariantCultureIgnoreCase))
-                    orderItemId = Convert.ToInt32(formValue.Substring("btnPvActivateDownload".Length));
+                    orderItemId = Convert.ToInt32(formValue["btnPvActivateDownload".Length..]);
 
             var orderItem = _orderService.GetOrderItemById(orderItemId)
                 ?? throw new ArgumentException("No order item found with the specified id");
@@ -1473,8 +1473,8 @@ namespace Nop.Web.Areas.Admin.Controllers
             //prepare model
             var model = _orderModelFactory.PrepareOrderModel(null, order);
 
-            //selected panel
-            SaveSelectedPanelName("order-products", persistForTheNextRequest: false);
+            //selected card
+            SaveSelectedCardName("order-products", persistForTheNextRequest: false);
             return View(model);
         }
 
@@ -1773,8 +1773,8 @@ namespace Nop.Web.Areas.Admin.Controllers
                 foreach (var warning in updateOrderParameters.Warnings)
                     _notificationService.WarningNotification(warning);
 
-                //selected panel
-                SaveSelectedPanelName("order-products");
+                //selected card
+                SaveSelectedCardName("order-products");
                 return RedirectToAction("Edit", "Order", new { id = order.Id });
             }
 
@@ -1858,7 +1858,8 @@ namespace Nop.Web.Areas.Admin.Controllers
                 });
 
                 LogEditOrder(order.Id);
-
+                
+                _notificationService.SuccessNotification(_localizationService.GetResource("Admin.Customers.Customers.Addresses.Updated"));
                 return RedirectToAction("AddressEdit", new { addressId = model.Address.Id, orderId = model.OrderId });
             }
 

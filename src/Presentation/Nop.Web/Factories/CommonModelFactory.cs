@@ -352,6 +352,7 @@ namespace Nop.Web.Factories
 
             var model = new HeaderLinksModel
             {
+                RegistrationType = _customerSettings.UserRegistrationType,
                 IsAuthenticated = _customerService.IsRegistered(customer),
                 CustomerName = _customerService.IsRegistered(customer) ? _customerService.FormatUsername(customer) : string.Empty,
                 ShoppingCartEnabled = _permissionService.Authorize(StandardPermissionProvider.EnableShoppingCart),
@@ -681,7 +682,8 @@ namespace Nop.Web.Factories
                 if (_sitemapSettings.SitemapIncludeProducts)
                 {
                     var productsGroupTitle = _localizationService.GetResource("Sitemap.Products");
-                    var products = _productService.SearchProducts(storeId: _storeContext.CurrentStore.Id, visibleIndividuallyOnly: true);
+                    var products = _productService.SearchProducts(visibleIndividuallyOnly: true, storeId: _storeContext.CurrentStore.Id);
+                    
                     model.Items.AddRange(products.Select(product => new SitemapModel.SitemapItemModel
                     {
                         GroupTitle = productsGroupTitle,

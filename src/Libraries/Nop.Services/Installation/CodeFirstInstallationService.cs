@@ -6155,8 +6155,6 @@ namespace Nop.Services.Installation
                 UseSystemEmailForContactUsForm = true,
 
                 DisplayJavaScriptDisabledWarning = false,
-                UseFullTextSearch = false,
-                FullTextMode = FulltextSearchMode.ExactMatch,
                 Log404Errors = true,
                 BreadcrumbDelimiter = "/",
                 BbcodeEditorOpenLinksInNewWindow = false,
@@ -6445,6 +6443,11 @@ namespace Nop.Services.Installation
                 PhoneNumberValidationRule = "^[0-9]{1,14}?$"
             });
 
+            settingService.SaveSetting(new MultiFactorAuthenticationSettings
+            {
+                ForceMultifactorAuthentication = false
+            });
+
             settingService.SaveSetting(new AddressSettings
             {
                 CompanyEnabled = true,
@@ -6637,7 +6640,8 @@ namespace Nop.Services.Installation
                 BypassShippingMethodSelectionIfOnlyOne = false,
                 UseCubeRootMethod = true,
                 ConsiderAssociatedProductsDimensions = true,
-                ShipSeparatelyOneItemEach = true
+                ShipSeparatelyOneItemEach = true,
+                RequestDelay = 300,
             });
 
             settingService.SaveSetting(new PaymentSettings

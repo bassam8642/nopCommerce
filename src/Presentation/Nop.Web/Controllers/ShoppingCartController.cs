@@ -1386,8 +1386,8 @@ namespace Nop.Web.Controllers
 
             if (errors.Count > 0)
                 return Json(new { 
-                    success = false,
-                    errors = errors
+                    Success = false,
+                    Errors = errors
                 });
 
             var cart = _shoppingCartService.GetShoppingCart(_workContext.CurrentCustomer, ShoppingCartType.ShoppingCart, _storeContext.CurrentStore.Id);
@@ -1396,11 +1396,7 @@ namespace Nop.Web.Controllers
 
             var result = _shoppingCartModelFactory.PrepareEstimateShippingResultModel(cart, model.CountryId, model.StateProvinceId, model.ZipPostalCode, true);
 
-            return Json(new
-            {
-                success = true,
-                result = result
-            });
+            return Json(result);
         }
 
         [HttpPost, ActionName("Cart")]
@@ -1413,7 +1409,7 @@ namespace Nop.Web.Controllers
             var discountId = 0;
             foreach (var formValue in form.Keys)
                 if (formValue.StartsWith("removediscount-", StringComparison.InvariantCultureIgnoreCase))
-                    discountId = Convert.ToInt32(formValue.Substring("removediscount-".Length));
+                    discountId = Convert.ToInt32(formValue["removediscount-".Length..]);
             var discount = _discountService.GetDiscountById(discountId);
             if (discount != null)
                 _customerService.RemoveDiscountCouponCode(_workContext.CurrentCustomer, discount.CouponCode);
@@ -1434,7 +1430,7 @@ namespace Nop.Web.Controllers
             var giftCardId = 0;
             foreach (var formValue in form.Keys)
                 if (formValue.StartsWith("removegiftcard-", StringComparison.InvariantCultureIgnoreCase))
-                    giftCardId = Convert.ToInt32(formValue.Substring("removegiftcard-".Length));
+                    giftCardId = Convert.ToInt32(formValue["removegiftcard-".Length..]);
             var gc = _giftCardService.GetGiftCardById(giftCardId);
             if (gc != null)
                 _customerService.RemoveGiftCardCouponCode(_workContext.CurrentCustomer, gc.GiftCardCouponCode);

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using LinqToDB;
 using Nop.Core;
 using Nop.Core.Caching;
 using Nop.Core.Domain.Catalog;
@@ -39,6 +41,19 @@ namespace Nop.Services.Stores
         #endregion
 
         #region Methods
+
+        /// <summary>
+        /// Get an expression predicate to apply a store mapping
+        /// </summary>
+        /// <param name="storeId">Store identifier</param>
+        /// <typeparam name="TEntity">Type of entity with supported store mapping</typeparam>
+        /// <returns>Lambda expression</returns>
+        public virtual Expression<Func<TEntity, bool>> ApplyStoreMapping<TEntity>(int storeId) where TEntity : BaseEntity, IStoreMappingSupported
+        {
+            return (me) => (from sm in _storeMappingRepository.Table
+                            where !me.LimitedToStores || (sm.StoreId == storeId && sm.EntityId == me.Id && sm.EntityName == typeof(TEntity).Name)
+                            select sm.EntityId).Any();
+        }
 
         /// <summary>
         /// Deletes a store mapping record
@@ -119,6 +134,29 @@ namespace Nop.Services.Stores
             };
 
             InsertStoreMapping(storeMapping);
+        }
+
+        /// <summary>
+        /// Get a value indicating whether a store mapping exists for an entity type
+        /// </summary>
+        /// <param name="storeId">Store identifier</param>
+        /// <typeparam name="T">Entity type</typeparam>
+        /// <returns>True if exists; otherwise false</returns>
+        public virtual bool IsEntityMappingExists<T>(int storeId) where T : BaseEntity, IStoreMappingSupported
+        {
+            if (storeId == 0)
+                return false;
+
+            var entityName = typeof(T).Name;
+
+            var key = _staticCacheManager.PrepareKeyForDefaultCache(NopStoreDefaults.StoreMappingExistsCacheKey, storeId, entityName);
+
+            var query = from sm in _storeMappingRepository.Table
+                where sm.StoreId == storeId &&
+                      sm.EntityName == entityName
+                select sm.StoreId;
+
+            return _staticCacheManager.Get(key, query.Any);
         }
 
         /// <summary>

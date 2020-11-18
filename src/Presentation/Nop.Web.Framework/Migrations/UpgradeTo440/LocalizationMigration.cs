@@ -109,6 +109,21 @@ namespace Nop.Web.Framework.Migrations.UpgradeTo440
                 "ShoppingCart.AddToWishlist.Update",
                 "ShoppingCart.UpdateCartItem",
                 "Tax.SelectType",
+                "Admin.Configuration.Settings.GeneralCommon.BlockTitle.FullText",
+                "Admin.Configuration.Settings.GeneralCommon.FullTextSettings.CurrenlyDisabled",
+                "Admin.Configuration.Settings.GeneralCommon.FullTextSettings.CurrenlyEnabled",
+                "Admin.Configuration.Settings.GeneralCommon.FullTextSettings.Disable",
+                "Admin.Configuration.Settings.GeneralCommon.FullTextSettings.Disabled",
+                "Admin.Configuration.Settings.GeneralCommon.FullTextSettings.Enable",
+                "Admin.Configuration.Settings.GeneralCommon.FullTextSettings.Enabled",
+                "Admin.Configuration.Settings.GeneralCommon.FullTextSettings.NoiseWords",
+                "Admin.Configuration.Settings.GeneralCommon.FullTextSettings.NotSupported",
+                "Admin.Configuration.Settings.GeneralCommon.FullTextSettings.SearchMode",
+                "Admin.Configuration.Settings.GeneralCommon.FullTextSettings.SearchMode.Hint",
+                "Admin.Configuration.Settings.GeneralCommon.FullTextSettings.Supported",
+                "Enums.Nop.Core.Domain.Common.FulltextSearchMode.And",
+                "Enums.Nop.Core.Domain.Common.FulltextSearchMode.ExactMatch",
+                "Enums.Nop.Core.Domain.Common.FulltextSearchMode.Or",
             });
 
             localizationService.AddLocaleResource(new Dictionary<string, string>
@@ -248,6 +263,19 @@ namespace Nop.Web.Framework.Migrations.UpgradeTo440
                 ["Admin.Configuration.Plugins.ChangesApplyAfterReboot"] = "Changes will be applied after restart application",
                 ["Admin.Configuration.Plugins.Fields.IsEnabled"] = "Enabled",
                 ["Admin.Customers.ActivityLog.Fields.IpAddress.Hint"] = "A customer IP address.",
+                ["Plugins.Widgets.GoogleAnalytics.UseJsToSendEcommerceInfo"] = "Use JS to send eCommerce info",
+                ["Plugins.Widgets.GoogleAnalytics.UseJsToSendEcommerceInfo.Hint"] = "Check to use JS code to send eCommerce info from the order completed page. But in case of redirection payment methods some customers may skip it. Otherwise, eCommerce information will be sent using HTTP request. Information is sent each time an order is paid but UTM is not supported in this mode.",
+                ["Plugins.Widgets.GoogleAnalytics.IncludeCustomerId"] = "Include customer ID",
+                ["Plugins.Widgets.GoogleAnalytics.IncludeCustomerId.Hint"] = "Check to include customer identifier to script.",
+                ["Admin.Configuration.Plugins.DiscardChanges"] = "Discard changes",
+                ["Admin.Configuration.Plugins.DiscardChanges.Progress"] = "Discarding changes on plugins...",
+                ["Admin.Configuration.Plugins.ApplyChanges"] = "Restart application to apply changes",
+                ["Admin.Configuration.Plugins.ApplyChanges.Progress"] = "Applying changes on plugins...",
+                ["Products.EstimateShipping.NoSelectedShippingOption"] = "Please select the address you want to ship to",
+                ["Admin.Configuration.Settings.CustomerUser.ForceMultifactorAuthentication"] = "Force multi-factor authentication",
+                ["Admin.Configuration.Settings.CustomerUser.ForceMultifactorAuthentication.Hint"] = "Force activation of multi-factor authentication for all users (at least one MFA provider must be active).",
+                ["Account.MultiFactorAuthentication.Warning.ForceActivation"] = "Enforce multi-factor authentication for all users is enabled.",
+                ["Admin.Configuration.Settings.CustomerUser.ForceMultifactorAuthentication.Warning"] = "There are currently no active authentication providers. To use this setting, you must activate one of the multi-factor authentication providers.",
             });
 
             // rename locales

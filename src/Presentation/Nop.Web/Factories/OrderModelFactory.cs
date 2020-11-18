@@ -4,6 +4,7 @@ using Nop.Core;
 using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Common;
 using Nop.Core.Domain.Customers;
+using Nop.Core.Domain.Directory;
 using Nop.Core.Domain.Orders;
 using Nop.Core.Domain.Shipping;
 using Nop.Core.Domain.Tax;
@@ -36,6 +37,7 @@ namespace Nop.Web.Factories
         private readonly IAddressModelFactory _addressModelFactory;
         private readonly IAddressService _addressService;
         private readonly ICountryService _countryService;
+        private readonly IStateProvinceService _stateProvinceService;
         private readonly ICurrencyService _currencyService;
         private readonly ICustomerService _customerService;
         private readonly IDateTimeHelper _dateTimeHelper;
@@ -70,6 +72,7 @@ namespace Nop.Web.Factories
             IAddressModelFactory addressModelFactory,
             IAddressService addressService,
             ICountryService countryService,
+            IStateProvinceService stateProvinceService,
             ICurrencyService currencyService,
             ICustomerService customerService,
             IDateTimeHelper dateTimeHelper,
@@ -100,6 +103,7 @@ namespace Nop.Web.Factories
             _addressModelFactory = addressModelFactory;
             _addressService = addressService;
             _countryService = countryService;
+            _stateProvinceService = stateProvinceService;
             _currencyService = currencyService;
             _customerService = customerService;
             _dateTimeHelper = dateTimeHelper;
@@ -226,7 +230,12 @@ namespace Nop.Web.Factories
                         Address1 = pickupAddress.Address1,
                         City = pickupAddress.City,
                         County = pickupAddress.County,
-                        CountryName = _countryService.GetCountryByAddress(pickupAddress)?.Name ?? string.Empty,
+                        StateProvinceName = _stateProvinceService.GetStateProvinceByAddress(pickupAddress) is StateProvince stateProvince
+                            ? _localizationService.GetLocalized(stateProvince, entity => entity.Name)
+                            : string.Empty,
+                        CountryName = _countryService.GetCountryByAddress(pickupAddress) is Country country
+                            ? _localizationService.GetLocalized(country, entity => entity.Name)
+                            : string.Empty,
                         ZipPostalCode = pickupAddress.ZipPostalCode
                     };
                 }
