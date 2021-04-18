@@ -44,7 +44,9 @@
                 <div asp-validation-summary="All" class="message-error"></div>
 
                 <p>@ILS.GetResource("Tooltip2")</p>
-                <p>@ILS.GetResource("Documentation1") <a href="http://docs.nopcommerce.com/dashboard.action?utm_source=installation-page&utm_medium=footer&utm_campaign=installation-page" target="_blank" rel="noopener noreferrer">@ILS.GetResource("Documentation2")</a>.</p>
+                <p>@ILS.GetResource("Documentation1") 
+                    <a href="@(Docs.Main + Utm.OnInstall)" target="_blank" rel="noopener noreferrer">@ILS.GetResource("Documentation2")</a>.
+                </p>
 
                 <script>
                     function showThrobber(message) {
@@ -59,7 +61,7 @@
                             if ($('#installation-form').valid()) {
                                 $("html, body").animate({ scrollTop: 0 }, 400);
                                 showThrobber('@Html.Raw(JavaScriptEncoder.Default.Encode(ILS.GetResource("Installing")))');
-                                $('input[type=submit]', this).attr('disabled', 'disabled');
+                                $('button[type=submit]', this).attr('disabled', 'disabled');
                             }
                         });
                     });
@@ -68,7 +70,7 @@
                         $('#restart-form').submit(function () {
                             $("html, body").animate({ scrollTop: 0 }, 400);
                             showThrobber('@Html.Raw(JavaScriptEncoder.Default.Encode(ILS.GetResource("RestartProgress")))');
-                            $('input[type=submit]', this).attr('disabled', 'disabled');
+                            $('button[type=submit]', this).attr('disabled', 'disabled');
                         });
                     });
 
@@ -166,18 +168,29 @@
                                     <input asp-for="ConfirmPassword" class="form-control" />
                                 </div>
                             </div>
+                            @if (Model.InstallRegionalResources)
+                            {
+                                <div class="form-group row" id="regionalResources">
+                                    <label class="col-sm-3 col-form-label text-right font-weight-bold">
+                                        @ILS.GetResource("Country")
+                                    </label>
+                                    <div class="col-sm-8">
+                                        <nop-select asp-for="Country" asp-items="Model.AvailableCountries" />
+                                    </div>
+                                </div>
+                            }
                             @if (!Model.DisableSampleDataOption)
                             {
                                 <div class="form-group row">
                                     <div class="col-md-6 offset-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input" asp-for="InstallSampleData" />
-                                            <label class="form-check-label" for="@Html.IdFor(m => m.InstallSampleData)">                                                
+                                            <label class="form-check-label" for="@Html.IdFor(m => m.InstallSampleData)">
                                                 @ILS.GetResource("CreateSampleData")
                                             </label>
                                         </div>
                                     </div>
-                                </div>                                
+                                </div>
                             }
                         </div>
                     </div>
@@ -199,7 +212,7 @@
                                 <div class="col-md-6 offset-md-3">
                                     <div class="form-check">
                                         <input class="form-check-input" asp-for="CreateDatabaseIfNotExists" />
-                                        <label class="form-check-label" for="@Html.IdFor(m => m.CreateDatabaseIfNotExists)" >
+                                        <label class="form-check-label" for="@Html.IdFor(m => m.CreateDatabaseIfNotExists)">
                                             @ILS.GetResource("CreateDatabaseIfDoesNotExist")
                                         </label>
                                     </div>
@@ -218,10 +231,10 @@
                             <div id="sqlConnectionInfo">
                                 <hr />
                                 @await Html.PartialAsync("_Install.ConnectionString", Model)
-                                <div class="form-group row" id="sqlDatabaseConnectionString">                                    
+                                <div class="form-group row" id="sqlDatabaseConnectionString">
                                     <label class="col-sm-3 col-form-label text-right font-weight-bold">
                                         @ILS.GetResource("ConnectionString")
-                                    </label>                                    
+                                    </label>
                                     <div class="col-sm-8">
                                         <input asp-for="ConnectionString" class="form-control" />
                                         <span class="hint">

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Nop.Core;
 using Nop.Core.Caching;
-using Nop.Core.Domain.Catalog;
-using Nop.Core.Domain.Security;
 using Nop.Core.Domain.Topics;
 using Nop.Data;
 using Nop.Services.Customers;
@@ -20,7 +19,6 @@ namespace Nop.Services.Topics
     {
         #region Fields
 
-        private readonly CatalogSettings _catalogSettings;
         private readonly IAclService _aclService;
         private readonly ICustomerService _customerService;
         private readonly IRepository<Topic> _topicRepository;
@@ -32,7 +30,7 @@ namespace Nop.Services.Topics
 
         #region Ctor
 
-        public TopicService(CatalogSettings catalogSettings,
+        public TopicService(
             IAclService aclService,
             ICustomerService customerService,
             IRepository<Topic> topicRepository,
@@ -40,7 +38,6 @@ namespace Nop.Services.Topics
             IStoreMappingService storeMappingService,
             IWorkContext workContext)
         {
-            _catalogSettings = catalogSettings;
             _aclService = aclService;
             _customerService = customerService;
             _topicRepository = topicRepository;
@@ -51,53 +48,29 @@ namespace Nop.Services.Topics
 
         #endregion
 
-        #region Utilities
-
-        /// <summary>
-        /// Filter hidden entries according to constraints if any
-        /// </summary>
-        /// <param name="query">Query to filter</param>
-        /// <param name="storeId">A store identifier</param>
-        /// <param name="customerRoleIds">Identifiers of customer's roles</param>
-        /// <returns>Filtered query</returns>
-        protected virtual IQueryable<TEntity> FilterHiddenEntries<TEntity>(IQueryable<TEntity> query, int storeId, int[] customerRoleIds)
-            where TEntity : Topic
-        {
-            //filter unpublished entries
-            query = query.Where(entry => entry.Published);
-
-            //apply store mapping constraints
-            if (!_catalogSettings.IgnoreStoreLimitations && _storeMappingService.IsEntityMappingExists<TEntity>(storeId))
-                query = query.Where(_storeMappingService.ApplyStoreMapping<TEntity>(storeId));
-
-            //apply ACL constraints
-            if (!_catalogSettings.IgnoreAcl && _aclService.IsEntityAclMappingExist<TEntity>(customerRoleIds))
-                query = query.Where(_aclService.ApplyAcl<TEntity>(customerRoleIds));
-
-            return query;
-        }
-
-        #endregion
-
         #region Methods
 
         /// <summary>
         /// Deletes a topic
         /// </summary>
         /// <param name="topic">Topic</param>
-        public virtual void DeleteTopic(Topic topic)
+        /// <returns>A task that represents the asynchronous operation</returns>
+        public virtual async Task DeleteTopicAsync(Topic topic)
         {
-            _topicRepository.Delete(topic);
+            await _topicRepository.DeleteAsync(topic);
         }
 
         /// <summary>
         /// Gets a topic
         /// </summary>
         /// <param name="topicId">The topic identifier</param>
-        /// <returns>Topic</returns>
-        public virtual Topic GetTopicById(int topicId)
+        /// <returns>
+        /// A task that represents the asynchronous operation
+        /// The task result contains the opic
+        /// </returns>
+        public virtual async Task<Topic> GetTopicByIdAsync(int topicId)
         {
-            return _topicRepository.GetById(topicId, cache => default);
+            return await _topicRepository.GetByIdAsync(topicId, cache => default);
         }
 
         /// <summary>
@@ -106,22 +79,33 @@ namespace Nop.Services.Topics
         /// <param name="systemName">The topic system name</param>
         /// <param name="storeId">Store identifier; pass 0 to ignore filtering by store and load the first one</param>
         /// <param name="showHidden">A value indicating whether to show hidden records</param>
-        /// <returns>Topic</returns>
-        public virtual Topic GetTopicBySystemName(string systemName, int storeId = 0, bool showHidden = false)
+        /// <returns>
+        /// A task that represents the asynchronous operation
+        /// The task result contains the opic
+        /// </returns>
+        public virtual async Task<Topic> GetTopicBySystemNameAsync(string systemName, int storeId = 0, bool showHidden = false)
         {
             if (string.IsNullOrEmpty(systemName))
                 return null;
 
-            var customerRolesIds = _customerService.GetCustomerRoleIds(_workContext.CurrentCustomer);
+            var customer = await _workContext.GetCurrentCustomerAsync();
+            var customerRoleIds = await _customerService.GetCustomerRoleIdsAsync(customer);
 
-            var cacheKey = _staticCacheManager.PrepareKeyForDefaultCache(NopTopicDefaults.TopicBySystemNameCacheKey, systemName, storeId, customerRolesIds);
+            var cacheKey = _staticCacheManager.PrepareKeyForDefaultCache(NopTopicDefaults.TopicBySystemNameCacheKey, systemName, storeId, customerRoleIds);
 
-            var topic = _staticCacheManager.Get(cacheKey, () =>
+            var topic = await _staticCacheManager.GetAsync(cacheKey, async () =>
             {
                 var query = _topicRepository.Table;
 
                 if (!showHidden)
-                    query = FilterHiddenEntries(query, storeId, customerRolesIds);
+                    query = query.Where(t => t.Published);
+
+                //apply store mapping constraints
+                query = await _storeMappingService.ApplyStoreMapping(query, storeId);
+
+                //apply ACL constraints
+                if (!showHidden)
+                    query = await _aclService.ApplyAcl(query, customerRoleIds);
 
                 return query.Where(t => t.SystemName == systemName)
                     .OrderBy(t => t.Id)
@@ -138,16 +122,27 @@ namespace Nop.Services.Topics
         /// <param name="ignoreAcl">A value indicating whether to ignore ACL rules</param>
         /// <param name="showHidden">A value indicating whether to show hidden topics</param>
         /// <param name="onlyIncludedInTopMenu">A value indicating whether to show only topics which include on the top menu</param>
-        /// <returns>Topics</returns>
-        public virtual IList<Topic> GetAllTopics(int storeId, bool ignoreAcl = false, bool showHidden = false, bool onlyIncludedInTopMenu = false)
+        /// <returns>
+        /// A task that represents the asynchronous operation
+        /// The task result contains the opics
+        /// </returns>
+        public virtual async Task<IList<Topic>> GetAllTopicsAsync(int storeId,
+            bool ignoreAcl = false, bool showHidden = false, bool onlyIncludedInTopMenu = false)
         {
-            //ACL (access control list)
-            var customerRolesIds = _customerService.GetCustomerRoleIds(_workContext.CurrentCustomer);
+            var customer = await _workContext.GetCurrentCustomerAsync();
+            var customerRoleIds = await _customerService.GetCustomerRoleIdsAsync(customer);
 
-            return _topicRepository.GetAll(query =>
+            return await _topicRepository.GetAllAsync(async query =>
             {
                 if (!showHidden)
-                    query = FilterHiddenEntries(query, storeId, customerRolesIds);
+                    query = query.Where(t => t.Published);
+
+                //apply store mapping constraints
+                query = await _storeMappingService.ApplyStoreMapping(query, storeId);
+
+                //apply ACL constraints
+                if (!showHidden && !ignoreAcl)
+                    query = await _aclService.ApplyAcl(query, customerRoleIds);
 
                 if (onlyIncludedInTopMenu)
                     query = query.Where(t => t.IncludeInTopMenu);
@@ -157,7 +152,7 @@ namespace Nop.Services.Topics
             {
                 return ignoreAcl
                     ? cache.PrepareKeyForDefaultCache(NopTopicDefaults.TopicsAllCacheKey, storeId, showHidden, onlyIncludedInTopMenu)
-                    : cache.PrepareKeyForDefaultCache(NopTopicDefaults.TopicsAllWithACLCacheKey, storeId, showHidden, onlyIncludedInTopMenu, customerRolesIds);
+                    : cache.PrepareKeyForDefaultCache(NopTopicDefaults.TopicsAllWithACLCacheKey, storeId, showHidden, onlyIncludedInTopMenu, customerRoleIds);
             });
         }
 
@@ -169,17 +164,24 @@ namespace Nop.Services.Topics
         /// <param name="ignoreAcl">A value indicating whether to ignore ACL rules</param>
         /// <param name="showHidden">A value indicating whether to show hidden topics</param>
         /// <param name="onlyIncludedInTopMenu">A value indicating whether to show only topics which include on the top menu</param>
-        /// <returns>Topics</returns>
-        public virtual IList<Topic> GetAllTopics(int storeId, string keywords, bool ignoreAcl = false, bool showHidden = false, bool onlyIncludedInTopMenu = false)
+        /// <returns>
+        /// A task that represents the asynchronous operation
+        /// The task result contains the opics
+        /// </returns>
+        public virtual async Task<IList<Topic>> GetAllTopicsAsync(int storeId, string keywords,
+            bool ignoreAcl = false, bool showHidden = false, bool onlyIncludedInTopMenu = false)
         {
-            var topics = GetAllTopics(storeId, ignoreAcl: ignoreAcl, showHidden: showHidden, onlyIncludedInTopMenu: onlyIncludedInTopMenu);
+            var topics = await GetAllTopicsAsync(storeId,
+                ignoreAcl: ignoreAcl,
+                showHidden: showHidden,
+                onlyIncludedInTopMenu: onlyIncludedInTopMenu);
 
             if (!string.IsNullOrWhiteSpace(keywords))
             {
                 return topics
-                        .Where(topic => (topic.Title?.Contains(keywords, StringComparison.InvariantCultureIgnoreCase) ?? false) ||
-                                        (topic.Body?.Contains(keywords, StringComparison.InvariantCultureIgnoreCase) ?? false))
-                        .ToList();
+                    .Where(topic => (topic.Title?.Contains(keywords, StringComparison.InvariantCultureIgnoreCase) ?? false) ||
+                        (topic.Body?.Contains(keywords, StringComparison.InvariantCultureIgnoreCase) ?? false))
+                    .ToList();
             }
 
             return topics;
@@ -189,18 +191,20 @@ namespace Nop.Services.Topics
         /// Inserts a topic
         /// </summary>
         /// <param name="topic">Topic</param>
-        public virtual void InsertTopic(Topic topic)
+        /// <returns>A task that represents the asynchronous operation</returns>
+        public virtual async Task InsertTopicAsync(Topic topic)
         {
-            _topicRepository.Insert(topic);
+            await _topicRepository.InsertAsync(topic);
         }
 
         /// <summary>
         /// Updates the topic
         /// </summary>
         /// <param name="topic">Topic</param>
-        public virtual void UpdateTopic(Topic topic)
+        /// <returns>A task that represents the asynchronous operation</returns>
+        public virtual async Task UpdateTopicAsync(Topic topic)
         {
-            _topicRepository.Update(topic);
+            await _topicRepository.UpdateAsync(topic);
         }
 
         #endregion

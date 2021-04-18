@@ -12,17 +12,17 @@
 
         function toggleAllowVendorsToEditInfo() {
             if ($('#@Html.IdFor(model => model.AllowVendorsToEditInfo)').is(':checked')) {
-                $('#pnlNotifyStoreOwnerAboutVendorInformationChange').show();
+                $('#pnlNotifyStoreOwnerAboutVendorInformationChange').showElement();
             } else {
-                $('#pnlNotifyStoreOwnerAboutVendorInformationChange').hide();
+                $('#pnlNotifyStoreOwnerAboutVendorInformationChange').hideElement();
             }
         }
 
         function toggleAllowCustomersToApplyForVendorAccount() {
             if ($('#@Html.IdFor(model => model.AllowCustomersToApplyForVendorAccount)').is(':checked')) {
-                $('#pnlTermsOfServiceEnabled').show();
+                $('#pnlTermsOfServiceEnabled').showElement();
             } else {
-                $('#pnlTermsOfServiceEnabled').hide();
+                $('#pnlTermsOfServiceEnabled').hideElement();
             }
         }
     </script>

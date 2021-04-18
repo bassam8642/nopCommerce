@@ -9,13 +9,13 @@
 
     function toggleRecurring() {
         if ($('#@Html.IdFor(model => model.IsRecurring)').is(':checked')) {
-            $('#pnlCycleLength').show();
-            $('#pnlCyclePeriod').show();
-            $('#pnlTotalCycles').show();
+            $('#pnlCycleLength').showElement();
+            $('#pnlCyclePeriod').showElement();
+            $('#pnlTotalCycles').showElement();
         } else {
-            $('#pnlCycleLength').hide();
-            $('#pnlCyclePeriod').hide();
-            $('#pnlTotalCycles').hide();
+            $('#pnlCycleLength').hideElement();
+            $('#pnlCyclePeriod').hideElement();
+            $('#pnlTotalCycles').hideElement();
         }
     }
 </script>
@@ -44,7 +44,7 @@
                 <nop-label asp-for="RecurringCyclePeriodId" />
             </div>
             <div class="col-md-9">
-                <nop-select asp-for="RecurringCyclePeriodId" asp-items="@(((RecurringProductCyclePeriod)Model.RecurringCyclePeriodId).ToSelectList())" />
+                <nop-select asp-for="RecurringCyclePeriodId" asp-items="@await (((RecurringProductCyclePeriod)Model.RecurringCyclePeriodId).ToSelectListAsync())" />
                 <span asp-validation-for="RecurringCyclePeriodId"></span>
             </div>
         </div>

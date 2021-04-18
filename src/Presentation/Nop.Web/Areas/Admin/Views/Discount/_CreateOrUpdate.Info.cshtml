@@ -18,29 +18,29 @@
     function toggleDiscountType() {
         var selectedDiscountTypeId = $("#@Html.IdFor(model => model.DiscountTypeId)").val();
         if (selectedDiscountTypeId == @(((int) DiscountType.AssignedToCategories).ToString())) {
-            $('#discount-applied-to-categories-card').show();
-            $('#discount-applied-to-manufacturers-card').hide();
-            $('#discount-applied-to-products-card').hide();
-            $('#pnlMaximumDiscountedQuantity').show();
-            $('#pnlAppliedToSubCategories').show();
+            $('[data-card-name=discount-applied-to-categories]').showElement();
+            $('[data-card-name=discount-applied-to-manufacturers]').hideElement();
+            $('[data-card-name=discount-applied-to-products]').hideElement();
+            $('#pnlMaximumDiscountedQuantity').showElement();
+            $('#pnlAppliedToSubCategories').showElement();
     } else if (selectedDiscountTypeId == @(((int) DiscountType.AssignedToManufacturers).ToString())) {
-            $('#discount-applied-to-categories-card').hide();
-            $('#discount-applied-to-manufacturers-card').show();
-            $('#discount-applied-to-products-card').hide();
-            $('#pnlMaximumDiscountedQuantity').show();
-            $('#pnlAppliedToSubCategories').hide();
+            $('[data-card-name=discount-applied-to-categories]').hideElement();
+            $('[data-card-name=discount-applied-to-manufacturers]').showElement();
+            $('[data-card-name=discount-applied-to-products]').hideElement();
+            $('#pnlMaximumDiscountedQuantity').showElement();
+            $('#pnlAppliedToSubCategories').hideElement();
     } else if (selectedDiscountTypeId == @(((int) DiscountType.AssignedToSkus).ToString())) {
-            $('#discount-applied-to-categories-card').hide();
-            $('#discount-applied-to-manufacturers-card').hide();
-            $('#discount-applied-to-products-card').show();
-            $('#pnlMaximumDiscountedQuantity').show();
-            $('#pnlAppliedToSubCategories').hide();
+            $('[data-card-name=discount-applied-to-categories]').hideElement();
+            $('[data-card-name=discount-applied-to-manufacturers]').hideElement();
+            $('[data-card-name=discount-applied-to-products]').showElement();
+            $('#pnlMaximumDiscountedQuantity').showElement();
+            $('#pnlAppliedToSubCategories').hideElement();
     } else {
-            $('#discount-applied-to-categories-card').hide();
-            $('#discount-applied-to-manufacturers-card').hide();
-            $('#discount-applied-to-products-card').hide();
-            $('#pnlMaximumDiscountedQuantity').hide();
-            $('#pnlAppliedToSubCategories').hide();
+            $('[data-card-name=discount-applied-to-categories]').hideElement();
+            $('[data-card-name=discount-applied-to-manufacturers]').hideElement();
+            $('[data-card-name=discount-applied-to-products]').hideElement();
+            $('#pnlMaximumDiscountedQuantity').hideElement();
+            $('#pnlAppliedToSubCategories').hideElement();
     }
     }
 
@@ -48,38 +48,38 @@
         var selectedDiscountLimitationId = $("#@Html.IdFor(model => model.DiscountLimitationId)").val();
         if (selectedDiscountLimitationId == @(((int) DiscountLimitationType.NTimesOnly).ToString()) || selectedDiscountLimitationId == @(((int) DiscountLimitationType.NTimesPerCustomer).ToString())) {
             //'N Times Only' or 'N Times Per Customer'
-            $('#pnlLimitationTimes').show();
+            $('#pnlLimitationTimes').showElement();
     } else {
-            $('#pnlLimitationTimes').hide();
+            $('#pnlLimitationTimes').hideElement();
     }
     }
 
     function toggleUsePercentage() {
         if ($('#@Html.IdFor(model => model.UsePercentage)').is(':checked')) {
-            $('#pnlDiscountPercentage').show();
-            $('#pnlDiscountAmount').hide();
-            $('#pnlMaximumDiscountAmount').show();
+            $('#pnlDiscountPercentage').showElement();
+            $('#pnlDiscountAmount').hideElement();
+            $('#pnlMaximumDiscountAmount').showElement();
         } else {
-            $('#pnlDiscountPercentage').hide();
-            $('#pnlDiscountAmount').show();
-            $('#pnlMaximumDiscountAmount').hide();
+            $('#pnlDiscountPercentage').hideElement();
+            $('#pnlDiscountAmount').showElement();
+            $('#pnlMaximumDiscountAmount').hideElement();
         }
     }
 
     function toggleRequiresCouponCode() {
         if ($('#@Html.IdFor(model => model.RequiresCouponCode)').is(':checked')) {
-            $('#pnlCouponCode').show();
+            $('#pnlCouponCode').showElement();
             @if (!string.IsNullOrEmpty(Model.DiscountUrl))
             {
-                <text>$('#pnlDiscountUrl').show();</text>
+                <text>$('#pnlDiscountUrl').showElement();</text>
             }
             else
             {
-                <text>$('#pnlDiscountUrl').hide();</text>
+                <text>$('#pnlDiscountUrl').hideElement();</text>
             }
         } else {
-            $('#pnlCouponCode').hide();
-            $('#pnlDiscountUrl').hide();
+            $('#pnlCouponCode').hideElement();
+            $('#pnlDiscountUrl').hideElement();
         }
     }
 </script>
@@ -99,7 +99,7 @@
             <nop-label asp-for="DiscountTypeId" />
         </div>
         <div class="col-md-9">
-            <nop-select asp-for="DiscountTypeId" asp-items="@((DiscountType) Model.DiscountTypeId).ToSelectList()" />
+            <nop-select asp-for="DiscountTypeId" asp-items="@await ((DiscountType) Model.DiscountTypeId).ToSelectListAsync()" />
             <span asp-validation-for="DiscountTypeId"></span>
         </div>
     </div>
@@ -212,7 +212,7 @@
             <nop-label asp-for="DiscountLimitationId" />
         </div>
         <div class="col-md-9">
-            <nop-select asp-for="DiscountLimitationId" asp-items="@(((DiscountLimitationType)Model.DiscountLimitationId).ToSelectList())" />
+            <nop-select asp-for="DiscountLimitationId" asp-items="@await (((DiscountLimitationType)Model.DiscountLimitationId).ToSelectListAsync())" />
             <span asp-validation-for="DiscountLimitationId"></span>
         </div>
     </div>

@@ -9,11 +9,11 @@
 
     function toggleRental() {
         if ($('#@Html.IdFor(model => model.IsRental)').is(':checked')) {
-            $('#pnlRentalPriceLength').show();
-            $('#pnlRentalPricePeriod').show();
+            $('#pnlRentalPriceLength').showElement();
+            $('#pnlRentalPricePeriod').showElement();
         } else {
-            $('#pnlRentalPriceLength').hide();
-            $('#pnlRentalPricePeriod').hide();
+            $('#pnlRentalPriceLength').hideElement();
+            $('#pnlRentalPricePeriod').hideElement();
         }
     }
 </script>
@@ -42,7 +42,7 @@
                 <nop-label asp-for="RentalPricePeriodId" />
             </div>
             <div class="col-md-9">
-                <nop-select asp-for="RentalPricePeriodId" asp-items="@(((RentalPricePeriod)Model.RentalPricePeriodId).ToSelectList())" />
+                <nop-select asp-for="RentalPricePeriodId" asp-items="@await (((RentalPricePeriod)Model.RentalPricePeriodId).ToSelectListAsync())" />
                 <span asp-validation-for="RentalPricePeriodId"></span>
             </div>
         </div>

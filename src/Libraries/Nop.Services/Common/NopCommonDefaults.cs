@@ -84,6 +84,21 @@ namespace Nop.Services.Common
         /// </summary>
         public static string DefaultLocalePattern => "en";
 
+        /// <summary>
+        /// Gets default CultureInfo 
+        /// </summary>
+        public static string DefaultLanguageCulture => "en-US";
+
+        /// <summary>
+        /// Gets minimal progress of language pack translation to download and install
+        /// </summary>
+        public static int LanguagePackMinTranslationProgressToInstall => 80;
+
+        /// <summary>
+        /// Gets a name of generic attribute to store the value of 'LanguagePackProgress'
+        /// </summary>
+        public static string LanguagePackProgressAttribute => "LanguagePackProgress";
+
         #endregion
 
         #region nopCommerce official site
@@ -119,8 +134,9 @@ namespace Nop.Services.Common
         /// {2} : admin email
         /// {3} : store URL
         /// {4} : language code
+        /// {5} : culture name
         /// </remarks>
-        public static string NopInstallationCompletedPath => "installation-completed?version={0}&local={1}&email={2}&url={3}&language={4}";
+        public static string NopInstallationCompletedPath => "installation-completed?version={0}&local={1}&email={2}&url={3}&language={4}&culture={5}";
 
         /// <summary>
         /// Gets a path to request the nopCommerce official site for available categories of marketplace extensions

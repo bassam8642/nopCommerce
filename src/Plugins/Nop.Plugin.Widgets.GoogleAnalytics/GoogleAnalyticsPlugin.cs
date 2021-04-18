@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Nop.Core;
 using Nop.Services.Cms;
 using Nop.Services.Configuration;
@@ -39,10 +40,13 @@ namespace Nop.Plugin.Widgets.GoogleAnalytics
         /// <summary>
         /// Gets widget zones where this widget should be rendered
         /// </summary>
-        /// <returns>Widget zones</returns>
-        public IList<string> GetWidgetZones()
+        /// <returns>
+        /// A task that represents the asynchronous operation
+        /// The task result contains the widget zones
+        /// </returns>
+        public Task<IList<string>> GetWidgetZonesAsync()
         {
-            return new List<string> { PublicWidgetZones.HeadHtmlTag };
+            return Task.FromResult<IList<string>>(new List<string> { PublicWidgetZones.HeadHtmlTag });
         }
 
         /// <summary>
@@ -66,7 +70,8 @@ namespace Nop.Plugin.Widgets.GoogleAnalytics
         /// <summary>
         /// Install plugin
         /// </summary>
-        public override void Install()
+        /// <returns>A task that represents the asynchronous operation</returns>
+        public override async Task InstallAsync()
         {
             var settings = new GoogleAnalyticsSettings
             {
@@ -84,9 +89,9 @@ namespace Nop.Plugin.Widgets.GoogleAnalytics
                 </script>",
                 UseJsToSendEcommerceInfo = true
             };
-            _settingService.SaveSetting(settings);
+            await _settingService.SaveSettingAsync(settings);
 
-            _localizationService.AddLocaleResource(new Dictionary<string, string>
+            await _localizationService.AddLocaleResourceAsync(new Dictionary<string, string>
             {
                 ["Plugins.Widgets.GoogleAnalytics.GoogleId"] = "ID",
                 ["Plugins.Widgets.GoogleAnalytics.GoogleId.Hint"] = "Enter Google Analytics ID.",
@@ -103,21 +108,22 @@ namespace Nop.Plugin.Widgets.GoogleAnalytics
                 ["Plugins.Widgets.GoogleAnalytics.Instructions"] = "<p>Google Analytics is a free website stats tool from Google. It keeps track of statistics about the visitors and eCommerce conversion on your website.<br /><br />Follow the next steps to enable Google Analytics integration:<br /><ul><li><a href=\"http://www.google.com/analytics/\" target=\"_blank\">Create a Google Analytics account</a> and follow the wizard to add your website</li><li>Copy the Tracking ID into the 'ID' box below</li><li>Click the 'Save' button below and Google Analytics will be integrated into your store</li></ul><br />If you would like to switch between Google Analytics (used by default) and Universal Analytics, then please use the buttons below:</p>"
             });
 
-            base.Install();
+            await base.InstallAsync();
         }
 
         /// <summary>
         /// Uninstall plugin
         /// </summary>
-        public override void Uninstall()
+        /// <returns>A task that represents the asynchronous operation</returns>
+        public override async Task UninstallAsync()
         {
             //settings
-            _settingService.DeleteSetting<GoogleAnalyticsSettings>();
+            await _settingService.DeleteSettingAsync<GoogleAnalyticsSettings>();
 
             //locales
-            _localizationService.DeleteLocaleResources("Plugins.Widgets.GoogleAnalytics");
+            await _localizationService.DeleteLocaleResourcesAsync("Plugins.Widgets.GoogleAnalytics");
 
-            base.Uninstall();
+            await base.UninstallAsync();
         }
 
         #endregion
